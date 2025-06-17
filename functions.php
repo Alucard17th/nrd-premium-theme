@@ -177,14 +177,14 @@ function mpt_register_required_plugins() {
  *  – $selected_import is the array you returned in pt-ocdi/import_files.
  *    We use its import_file_name to build the path to the kit ZIP.
  */
-add_action( 'pt-ocdi/after_import', 'nrd_after_demo_import' );
+add_action( 'ocdi/after_import', 'nrd_after_demo_import' );
 
 function nrd_after_demo_import( array $selected_import ) {
 
 	/* -----------------------------------------------------------
 	 * 1 ▸ Build kit path from the demo slug
 	 * --------------------------------------------------------- */
-	$slug    = sanitize_title( $selected_import['import_file_name'] ); // e.g. "hero-showcase"
+	$slug    = sanitize_title( $selected_import['custom_slug'] ); // e.g. "hero-showcase"
 	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
 
 	if ( ! class_exists( '\Elementor\Plugin' ) || ! file_exists( $kit_zip ) ) {
