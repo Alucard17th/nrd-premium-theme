@@ -81,34 +81,92 @@ function mpt_register_required_plugins() {
 // 	return $args;
 // }, 10, 1 );
 
-add_action( 'ocdi/after_import', function ( $selected ) {
+// add_action( 'ocdi/after_import', function ( $selected ) {
 
-    error_log('Selected: ' . print_r($selected, true));
-	// turn "01 · Hero Showcase" → "hero-showcase"
-	$slug = sanitize_title( $selected['custom_slug'] );
+//     error_log('Selected: ' . print_r($selected, true));
+// 	// turn "01 · Hero Showcase" → "hero-showcase"
+// 	$slug = sanitize_title( $selected['custom_slug'] );
 
-	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
+// 	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
 
-	if ( class_exists( '\Elementor\Plugin' ) && file_exists( $kit_zip ) ) {
-		\Elementor\Plugin::$instance
-			->app
-			->get_component( 'import-export' )
-			->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
+// 	if ( class_exists( '\Elementor\Plugin' ) && file_exists( $kit_zip ) ) {
+// 		\Elementor\Plugin::$instance
+// 			->app
+// 			->get_component( 'import-export' )
+// 			->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
 
-        error_log('Kit Imported: ' . print_r($kit_zip, true));
-	}else{
-        error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
+//         error_log('Kit Imported: ' . print_r($kit_zip, true));
+// 	}else{
+//         error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
+//     }
+
+//     /* ---- Regenerate Elementor CSS ---- */
+// 	if ( class_exists( '\Elementor\Plugin' ) ) {
+// 		\Elementor\Plugin::$instance->files_manager->clear_cache();
+// 	}
+
+// 	// If you use UAEL or other addons that bundle their own CSS cache,
+// 	// also clear them:
+// 	if ( function_exists( 'uael_clear_asset_cache' ) ) {
+// 		uael_clear_asset_cache();
+// 	}
+
+// } );
+
+add_action('ocdi/after_import', function($selected) {
+    // Log selected data for debugging
+    error_log('Selected demo: ' . print_r($selected, true));
+    
+    if (!isset($selected['custom_slug'])) {
+        error_log('Error: custom_slug not set in selected demo data');
+        return;
     }
 
-    /* ---- Regenerate Elementor CSS ---- */
-	if ( class_exists( '\Elementor\Plugin' ) ) {
-		\Elementor\Plugin::$instance->files_manager->clear_cache();
-	}
+    $slug = sanitize_title($selected['custom_slug']);
+    $kit_zip = get_theme_file_path("demo-data/{$slug}/elementor-kit.zip");
 
-	// If you use UAEL or other addons that bundle their own CSS cache,
-	// also clear them:
-	if ( function_exists( 'uael_clear_asset_cache' ) ) {
-		uael_clear_asset_cache();
-	}
+    // Check if file exists and is readable
+    if (!file_exists($kit_zip) || !is_readable($kit_zip)) {
+        error_log('Error: Kit file not found or not readable: ' . $kit_zip);
+        return;
+    }
 
-} );
+    // Verify Elementor is active and has the required component
+    if (!class_exists('\Elementor\Plugin') || 
+        !isset(\Elementor\Plugin::$instance->app) ||
+        !method_exists(\Elementor\Plugin::$instance->app, 'get_component')) {
+        error_log('Error: Elementor not properly initialized');
+        return;
+    }
+
+    try {
+        $import_component = \Elementor\Plugin::$instance
+            ->app
+            ->get_component('import-export');
+            
+        if (!$import_component) {
+            error_log('Error: Elementor Import-Export component not available');
+            return;
+        }
+
+        $result = $import_component->import_kit($kit_zip, ['referrer' => 'remote']);
+        
+        if (is_wp_error($result)) {
+            error_log('Kit import failed: ' . $result->get_error_message());
+        } else {
+            error_log('Kit imported successfully: ' . $kit_zip);
+            
+            // Clear Elementor cache
+            \Elementor\Plugin::$instance->files_manager->clear_cache();
+            
+            // Clear UAEL cache if exists
+            if (function_exists('uael_clear_asset_cache')) {
+                uael_clear_asset_cache();
+            }
+            
+            // Add additional cache clearing for other addons if needed
+        }
+    } catch (Exception $e) {
+        error_log('Exception during kit import: ' . $e->getMessage());
+    }
+});
