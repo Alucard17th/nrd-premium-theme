@@ -105,6 +105,24 @@ add_action( 'ocdi/after_import', function ( $selected ) {
         error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
     }
 
+    // /* ---------- set Home 1 as the static front page ---------- */
+    // // try slug first (faster), fall back to page title
+    // $front_page = get_page_by_path( 'home-1' );           // slug after import
+    // if ( ! $front_page ) {
+    //     $front_page = get_page_by_title( 'Home 1' );      // title as seen in the XML
+    // }
+
+    // if ( $front_page ) {
+    //     update_option( 'show_on_front', 'page' );         // switch to static page
+    //     update_option( 'page_on_front', $front_page->ID );
+    // }
+
+    // /* ---------- optional: set a Posts / Blog page ---------- */
+    // $blog_page = get_page_by_path( 'blog' ) ?: get_page_by_title( 'Blog' );
+    // if ( $blog_page ) {
+    //     update_option( 'page_for_posts', $blog_page->ID );
+    // }
+
     /* ---- Regenerate Elementor CSS ---- */
 	if ( class_exists( '\Elementor\Plugin' ) ) {
 		\Elementor\Plugin::$instance->files_manager->clear_cache();
