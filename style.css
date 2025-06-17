@@ -1,0 +1,16 @@
+/*
+Theme Name: Nrd Premium Theme
+Theme URI: https://example.com
+Author: Your Name
+Author URI: https://example.com
+Description: A premium WordPress theme built for full Elementor customization.
+Version: 1.0
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: nrd-premium-theme
+*/
+
+.home, .wp-singular{
+    margin:0 !important;
+    padding:0;
+}

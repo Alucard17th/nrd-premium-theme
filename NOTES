@@ -1,0 +1,263 @@
+Creating a fully customizable premium WordPress theme from scratch using Elementor and demo content requires a structured, detailed approach. Below is a step-by-step guide that walks you through the entire process—from setting up your theme files to making the entire site editable with Elementor and importable via demo content.
+
+🛠️ STEP-BY-STEP: Build a Premium WordPress Theme with Elementor & Demo Content
+🔹 PART 1: Theme Setup from Scratch
+Step 1: Create the Theme Folder
+Create a folder in wp-content/themes/ named my-premium-theme.
+
+Step 2: Create style.css
+This file registers your theme in WordPress.
+
+css
+Copy
+Edit
+/*
+Theme Name: My Premium Theme
+Theme URI: https://example.com
+Author: Your Name
+Author URI: https://example.com
+Description: A premium WordPress theme built for full Elementor customization.
+Version: 1.0
+License: GPLv2 or later
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: my-premium-theme
+*/
+Step 3: Create functions.php
+php
+Copy
+Edit
+<?php
+
+// Load styles and scripts
+function mpt_enqueue_scripts() {
+    wp_enqueue_style('mpt-style', get_stylesheet_uri());
+}
+add_action('wp_enqueue_scripts', 'mpt_enqueue_scripts');
+
+// Theme supports
+add_action('after_setup_theme', function() {
+    add_theme_support('title-tag');
+    add_theme_support('post-thumbnails');
+    add_theme_support('custom-logo');
+    add_theme_support('menus');
+});
+
+// Register menu
+register_nav_menus([
+    'main_menu' => __('Main Menu', 'my-premium-theme')
+]);
+
+// Elementor support
+add_action('after_setup_theme', function() {
+    add_theme_support('elementor');
+});
+Step 4: Create index.php (Basic Fallback)
+php
+Copy
+Edit
+<?php get_header(); ?>
+
+<main>
+  <h1><?php _e('Welcome to My Premium Theme', 'my-premium-theme'); ?></h1>
+  <p>This is the fallback index.php file.</p>
+</main>
+
+<?php get_footer(); ?>
+Step 5: Create header.php and footer.php
+These are basic wrappers; Elementor will override most pages, but they're required:
+
+header.php
+
+php
+Copy
+Edit
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+  <meta charset="<?php bloginfo('charset'); ?>">
+  <?php wp_head(); ?>
+</head>
+<body <?php body_class(); ?>>
+  <header>
+    <nav>
+      <?php wp_nav_menu(['theme_location' => 'main_menu']); ?>
+    </nav>
+  </header>
+footer.php
+
+php
+Copy
+Edit
+  <footer>
+    <p>&copy; <?php echo date('Y'); ?> My Premium Theme</p>
+  </footer>
+  <?php wp_footer(); ?>
+</body>
+</html>
+🔹 PART 2: Full Elementor-Based Page Building
+Step 6: Create Elementor-Compatible Templates
+To make pages editable and fully customizable via Elementor:
+
+Create a page template file (e.g., template-elementor-fullwidth.php):
+
+php
+Copy
+Edit
+<?php
+/**
+ * Template Name: Elementor Full Width
+ */
+get_header();
+?>
+
+<main id="primary" class="site-main">
+  <?php
+  while (have_posts()) : the_post();
+    the_content();
+  endwhile;
+  ?>
+</main>
+
+<?php get_footer(); ?>
+In WordPress admin, when creating a new page, choose this template so Elementor can take full control.
+
+Step 7: Required Plugins Installation
+Install the following via functions.php or bundle with a helper plugin:
+
+Elementor
+
+Elementor Pro (if needed)
+
+One Click Demo Import
+
+Contact Form 7 or WPForms
+
+Custom Fonts plugin (optional)
+
+Use TGM Plugin Activation to force plugin installs.
+
+🔹 PART 3: Create Editable Pages in Elementor
+Step 8: Build These Pages Using Elementor
+Homepage
+
+Hero Section
+
+Services/Features
+
+Testimonials
+
+CTA Section
+
+About Page
+
+Team Member Section
+
+Mission/Vision
+
+Timeline
+
+Services Page
+
+Service List
+
+Individual service blocks with icons
+
+Blog Archive (via WP Template)
+
+Use Elementor's Post widget
+
+Single Blog Post
+
+Use Elementor Theme Builder to customize
+
+Contact Page
+
+Contact form (via WPForms or Contact Form 7)
+
+Map widget
+
+Business hours
+
+Save each as an Elementor Template so it’s reusable.
+
+🔹 PART 4: Add Demo Content & Import Tools
+Step 9: Export Demo Content
+Export Content:
+
+Go to Tools → Export → Export All Content → Save content.xml
+
+Export Customizer Settings:
+
+Use "Customizer Export/Import" plugin → Export customizer.dat
+
+Export Widgets:
+
+Use "Widget Importer & Exporter" → Export .wie file
+
+Step 10: One Click Demo Import Integration
+Add to functions.php:
+
+php
+Copy
+Edit
+function mpt_import_files() {
+    return [
+        [
+            'import_file_name'             => 'Demo Import',
+            'local_import_file'            => get_template_directory() . '/demo-import/content.xml',
+            'local_import_widget_file'     => get_template_directory() . '/demo-import/widgets.wie',
+            'local_import_customizer_file' => get_template_directory() . '/demo-import/customizer.dat',
+            'import_notice'                => __('Make sure all plugins are installed before import.', 'my-premium-theme'),
+        ],
+    ];
+}
+add_filter('ocdi/import_files', 'mpt_import_files');
+Also, create a demo-import/ folder and place your content.xml, widgets.wie, and customizer.dat files inside.
+
+🔹 PART 5: Final Touches
+Step 11: Add screenshot.png
+Create a 1200x900px screenshot of your finished site.
+
+Save it as screenshot.png in the theme root. This shows in Appearance > Themes.
+
+Step 12: Prepare for Distribution
+Zip the theme folder
+
+Include a readme.txt with installation instructions
+
+Mention required plugins
+
+Add license and terms if distributing
+
+✅ What You End Up With:
+Fully Elementor-based theme (every page built in Elementor)
+
+Custom Elementor Page Template
+
+One Click Demo Import Support
+
+Editable Header/Footer via Elementor Pro or Theme Builder
+
+Demo Content and Widgets
+
+Responsive, SEO-ready design
+
+
+
+/**
+* Function to perform setup after importing data.
+* This function assigns the front page and the posts page (blog page) based on the imported demo.
+* @param array $selected_import The selected import data.
+*/
+
+function cdx_after_import_setup( $selected_import ) {
+
+    // Import Elementor kit data.
+    $cdx_kit_zip = get_parent_theme_file_path() . '/demo-content/elementor-kit.zip';
+    $import_export_module = \Elementor\Plugin::$instance->app->get_component( 'import-export' );
+    $import_settings['referrer'] = 'remote';
+    $import_export_module->import_kit( $cdx_kit_zip, $import_settings );
+
+}
+
+add_action( 'ocdi/after_import', 'cdx_after_import_setup' );
