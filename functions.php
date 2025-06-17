@@ -96,6 +96,11 @@ add_action( 'ocdi/after_import', function ( $selected ) {
 			->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
 
         error_log('Kit Imported: ' . print_r($kit_zip, true));
+
+        // 2.  Tell Elementor to inherit fonts & colours from the theme ------
+        //    (same effect as ticking the two check-boxes in Elementor → Settings)
+        update_option( 'elementor_disable_color_schemes',      'yes' ); // Disable Default Colors
+        update_option( 'elementor_disable_typography_schemes', 'yes' ); // Disable Default Fonts
 	}else{
         error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
     }
@@ -111,4 +116,4 @@ add_action( 'ocdi/after_import', function ( $selected ) {
 		uael_clear_asset_cache();
 	}
 
-} );
+}, 20 );
