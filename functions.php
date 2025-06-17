@@ -81,192 +81,34 @@ function mpt_register_required_plugins() {
 // 	return $args;
 // }, 10, 1 );
 
-// add_action( 'ocdi/after_import', function ( $selected ) {
+add_action( 'ocdi/after_import', function ( $selected ) {
 
-//     error_log('Selected: ' . print_r($selected, true));
-// 	// turn "01 · Hero Showcase" → "hero-showcase"
-// 	$slug = sanitize_title( $selected['custom_slug'] );
+    error_log('Selected: ' . print_r($selected, true));
+	// turn "01 · Hero Showcase" → "hero-showcase"
+	$slug = sanitize_title( $selected['custom_slug'] );
 
-// 	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
-
-// 	if ( class_exists( '\Elementor\Plugin' ) && file_exists( $kit_zip ) ) {
-// 		\Elementor\Plugin::$instance
-// 			->app
-// 			->get_component( 'import-export' )
-// 			->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
-
-//         error_log('Kit Imported: ' . print_r($kit_zip, true));
-// 	}else{
-//         error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
-//     }
-
-//     /* ---- Regenerate Elementor CSS ---- */
-// 	if ( class_exists( '\Elementor\Plugin' ) ) {
-// 		\Elementor\Plugin::$instance->files_manager->clear_cache();
-// 	}
-
-// 	// If you use UAEL or other addons that bundle their own CSS cache,
-// 	// also clear them:
-// 	if ( function_exists( 'uael_clear_asset_cache' ) ) {
-// 		uael_clear_asset_cache();
-// 	}
-
-// } );
-
-// add_action('ocdi/after_import', function($selected) {
-//     // Log selected data for debugging
-//     error_log('Selected demo: ' . print_r($selected, true));
-    
-//     if (!isset($selected['custom_slug'])) {
-//         error_log('Error: custom_slug not set in selected demo data');
-//         return;
-//     }
-
-//     $slug = sanitize_title($selected['custom_slug']);
-//     $kit_zip = get_theme_file_path("demo-data/{$slug}/elementor-kit.zip");
-
-//     // Check if file exists and is readable
-//     if (!file_exists($kit_zip) || !is_readable($kit_zip)) {
-//         error_log('Error: Kit file not found or not readable: ' . $kit_zip);
-//         return;
-//     }
-
-//     // Verify Elementor is active and has the required component
-//     if (!class_exists('\Elementor\Plugin') || 
-//         !isset(\Elementor\Plugin::$instance->app) ||
-//         !method_exists(\Elementor\Plugin::$instance->app, 'get_component')) {
-//         error_log('Error: Elementor not properly initialized');
-//         return;
-//     }
-
-//     try {
-//         $import_component = \Elementor\Plugin::$instance
-//             ->app
-//             ->get_component('import-export');
-            
-//         if (!$import_component) {
-//             error_log('Error: Elementor Import-Export component not available');
-//             return;
-//         }
-
-//         $result = $import_component->import_kit($kit_zip, ['referrer' => 'remote']);
-        
-//         if (is_wp_error($result)) {
-//             error_log('Kit import failed: ' . $result->get_error_message());
-//         } else {
-//             error_log('Kit imported successfully: ' . $kit_zip);
-            
-//             // Clear Elementor cache
-//             \Elementor\Plugin::$instance->files_manager->clear_cache();
-            
-//             // Clear UAEL cache if exists
-//             if (function_exists('uael_clear_asset_cache')) {
-//                 uael_clear_asset_cache();
-//             }
-            
-//             // Add additional cache clearing for other addons if needed
-//         }
-//     } catch (Exception $e) {
-//         error_log('Exception during kit import: ' . $e->getMessage());
-//     }
-// });
-
-/**
- *  OCDI: run *after* the XML/widgets/customizer have finished importing.
- *
- *  – $selected_import is the array you returned in pt-ocdi/import_files.
- *    We use its import_file_name to build the path to the kit ZIP.
- */
-/**
- * One-click Demo → import Elementor kit → activate it → regenerate CSS.
- * Runs automatically after OCDI finishes importing pages/widgets/customizer.
- */
-add_action( 'pt-ocdi/after_import', 'nrd_after_demo_import', 10, 1 );
-
-function nrd_after_demo_import( array $selected ) {
-
-	/* ─────────────────────────────────────────────────────────────
-	 * 1. Locate the kit ZIP that belongs to this demo
-	 *    (we store one zip per demo folder: demo-data/<slug>/elementor-kit.zip)
-	 * ──────────────────────────────────────────────────────────── */
-	if ( empty( $selected['custom_slug'] ) || ! class_exists( '\Elementor\Plugin' ) ) {
-		return;
-	}
-
-	$slug    = sanitize_title( $selected['custom_slug'] );           // eg “hero-showcase”
 	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
 
-	if ( ! file_exists( $kit_zip ) ) {
-		return;                                                      // nothing to import
+	if ( class_exists( '\Elementor\Plugin' ) && file_exists( $kit_zip ) ) {
+		\Elementor\Plugin::$instance
+			->app
+			->get_component( 'import-export' )
+			->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
+
+        error_log('Kit Imported: ' . print_r($kit_zip, true));
+	}else{
+        error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
+    }
+
+    /* ---- Regenerate Elementor CSS ---- */
+	if ( class_exists( '\Elementor\Plugin' ) ) {
+		\Elementor\Plugin::$instance->files_manager->clear_cache();
 	}
 
-	/* ─────────────────────────────────────────────────────────────
-	 * 2. Import the kit and capture its post-ID
-	 * ──────────────────────────────────────────────────────────── */
-	$ie   = \Elementor\Plugin::$instance->app->get_component( 'import-export' );
-	$resp = $ie->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
-
-	$kit_id = is_array( $resp ) && ! empty( $resp['kit_id'] )
-		? (int) $resp['kit_id']
-		: 0;
-
-	/* fallback – newest kit by date (old Elementor builds) */
-	if ( ! $kit_id ) {
-		$kit = get_posts( [
-			'post_type'   => 'elementor_library',
-			'meta_key'    => '_elementor_template_type',
-			'meta_value'  => 'kit',
-			'orderby'     => 'date',
-			'order'       => 'DESC',
-			'numberposts' => 1,
-			'fields'      => 'ids',
-		] );
-		$kit_id = $kit ? (int) $kit[0] : 0;
-	}
-
-	if ( ! $kit_id ) {
-		return;
-	}
-
-	/* ─────────────────────────────────────────────────────────────
-	 * 3. Activate the kit (works on every Elementor version)
-	 * ──────────────────────────────────────────────────────────── */
-	update_option( 'elementor_active_kit', $kit_id );
-
-	$km = \Elementor\Plugin::$instance->kits_manager;
-	if ( method_exists( $km, 'switch_active_kit' ) ) {               // ≥ 3.11
-		$km->switch_active_kit( $kit_id );
-	}
-
-	/* ─────────────────────────────────────────────────────────────
-	 * 4. Flush + rebuild CSS so selectors use the new kit-ID
-	 * ──────────────────────────────────────────────────────────── */
-	$fm = \Elementor\Plugin::$instance->files_manager;
-	$fm->clear_cache();                                              // wipe /uploads/elementor/css/
-
-	$post_ids = get_posts( [
-		'post_type'      => [ 'page', 'post', 'elementor_library' ],
-		'posts_per_page' => -1,
-		'meta_key'       => '_elementor_edit_mode',
-		'fields'         => 'ids',
-	] );
-
-	if ( method_exists( $fm, 'regenerate_css' ) ) {                  // ≥ 3.10
-		$fm->regenerate_css( $post_ids );
-	} elseif ( class_exists( '\Elementor\Core\Files\CSS\Post' ) ) {  // 2.9 – 3.9
-		foreach ( $post_ids as $id ) {
-			\Elementor\Core\Files\CSS\Post::create( $id )->update();
-		}
-	} elseif ( class_exists( '\Elementor\Post_CSS_File' ) ) {        // ≤ 2.8
-		foreach ( $post_ids as $id ) {
-			\Elementor\Post_CSS_File::create( $id )->update();
-		}
-	}
-
-	/* ─────────────────────────────────────────────────────────────
-	 * 5. Flush UAEL or other addon caches
-	 * ──────────────────────────────────────────────────────────── */
+	// If you use UAEL or other addons that bundle their own CSS cache,
+	// also clear them:
 	if ( function_exists( 'uael_clear_asset_cache' ) ) {
 		uael_clear_asset_cache();
 	}
-}
+
+} );
