@@ -147,14 +147,16 @@ add_action( 'pt-ocdi/after_import', function ( $selected ) {
 
     error_log('Selected: ' . print_r($selected, true));
 	// turn "01 · Hero Showcase" → "hero-showcase"
-	$slug = sanitize_title( $selected['import_file_name'] );
+	$slug = sanitize_title( $selected['custom_slug'] );
 
-	// $kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
+	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
 
-	// if ( class_exists( '\Elementor\Plugin' ) && file_exists( $kit_zip ) ) {
-	// 	\Elementor\Plugin::$instance
-	// 		->app
-	// 		->get_component( 'import-export' )
-	// 		->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
-	// }
+	if ( class_exists( '\Elementor\Plugin' ) && file_exists( $kit_zip ) ) {
+		\Elementor\Plugin::$instance
+			->app
+			->get_component( 'import-export' )
+			->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
+	}else{
+        error_log('Elementor not found');
+    }
 } );
