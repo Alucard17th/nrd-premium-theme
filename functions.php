@@ -99,33 +99,62 @@ add_filter( 'elementor/utils/register_elementor_post_type_args', function ( $arg
 	return $args;
 }, 10, 1 );
 
-add_action( 'ocdi/after_import', function () {
+// add_action( 'ocdi/after_import', function () {
 
-    /* — 1  set static front page / menus (your existing code) — */
+//     /* — 1  set static front page / menus (your existing code) — */
 
-    /* — 2  pick the **latest** imported kit and activate it — */
-    if ( class_exists( '\Elementor\Plugin' ) ) {
+//     /* — 2  pick the **latest** imported kit and activate it — */
+//     if ( class_exists( '\Elementor\Plugin' ) ) {
 
-        $kits = get_posts( [
-            'post_type'   => 'elementor_library',
-            'meta_key'    => '_elementor_template_type',
-            'meta_value'  => 'kit',
-            'orderby'     => 'date',
-            'order'       => 'DESC',   // newest first
-            'numberposts' => 1,
-            'fields'      => 'ids',
-        ] );
+//         $kits = get_posts( [
+//             'post_type'   => 'elementor_library',
+//             'meta_key'    => '_elementor_template_type',
+//             'meta_value'  => 'kit',
+//             'orderby'     => 'date',
+//             'order'       => 'DESC',   // newest first
+//             'numberposts' => 1,
+//             'fields'      => 'ids',
+//         ] );
 
-        if ( $kits ) {
-            $kit_id = (int) $kits[0];
-            update_option( 'elementor_active_kit', $kit_id );
-            \Elementor\Plugin::$instance->kits_manager->switch_active_kit( $kit_id );
-        }
+//         if ( $kits ) {
+//             $kit_id = (int) $kits[0];
+//             update_option( 'elementor_active_kit', $kit_id );
+//             \Elementor\Plugin::$instance->kits_manager->switch_active_kit( $kit_id );
+//         }
 
-        // Clear & regenerate CSS so global tokens compile
-        \Elementor\Plugin::$instance->files_manager->clear_cache();
-        if ( function_exists( 'uael_clear_asset_cache' ) ) {
-            uael_clear_asset_cache();
-        }
-    }
+//         // Clear & regenerate CSS so global tokens compile
+//         \Elementor\Plugin::$instance->files_manager->clear_cache();
+//         if ( function_exists( 'uael_clear_asset_cache' ) ) {
+//             uael_clear_asset_cache();
+//         }
+//     }
+// } );
+
+// function cdx_after_import_setup( $selected_import ) {
+
+//     // Import Elementor kit data.
+//     $cdx_kit_zip = get_parent_theme_file_path() . '/demo-content/elementor-kit.zip';
+//     $import_export_module = \Elementor\Plugin::$instance->app->get_component( 'import-export' );
+//     $import_settings['referrer'] = 'remote';
+//     $import_export_module->import_kit( $cdx_kit_zip, $import_settings );
+
+// }
+
+// add_action( 'ocdi/after_import', 'cdx_after_import_setup' );
+
+
+add_action( 'pt-ocdi/after_import', function ( $selected ) {
+
+    error_log('Selected: ' . print_r($selected, true));
+	// turn "01 · Hero Showcase" → "hero-showcase"
+	$slug = sanitize_title( $selected['import_file_name'] );
+
+	// $kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
+
+	// if ( class_exists( '\Elementor\Plugin' ) && file_exists( $kit_zip ) ) {
+	// 	\Elementor\Plugin::$instance
+	// 		->app
+	// 		->get_component( 'import-export' )
+	// 		->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
+	// }
 } );
