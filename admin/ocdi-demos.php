@@ -17,6 +17,7 @@ function mytheme_ocdi_demos() {
 			'import_preview_image_url'   => $base . 'hero-showcase/preview.png',
 			'import_notice'              => __( 'Hang tight—importing the Hero Showcase demo.', 'mytheme' ),
 			'preview_url'                => 'https://demo.yoursite.com/hero-showcase', // optional live link
+			'custom_slug'                => 'hero-showcase', // optional. Use this for a custom slug instead of the imported filename
 		],
         [
 			'import_file_name'           => '01 · Hero Def',
@@ -26,6 +27,7 @@ function mytheme_ocdi_demos() {
 			'import_preview_image_url'   => $base . 'hero-showcase/preview.png',
 			'import_notice'              => __( 'Hang tight—importing the Hero Showcase demo.', 'mytheme' ),
 			'preview_url'                => 'https://demo.yoursite.com/hero-showcase', // optional live link
+			'custom_slug'                => 'hero-def', // optional. Use this for a custom slug instead of the imported filename
 		]
 
 		/* duplicate & adjust four more blocks … */
