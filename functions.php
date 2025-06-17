@@ -76,11 +76,6 @@ function mpt_register_required_plugins() {
     tgmpa($plugins, $config);
 }
 
-// add_filter( 'elementor/utils/register_elementor_post_type_args', function ( $args ) {
-// 	$args['can_export'] = true;
-// 	return $args;
-// }, 10, 1 );
-
 add_action( 'ocdi/after_import', function ( $selected ) {
 
     error_log('Selected: ' . print_r($selected, true));
@@ -105,24 +100,28 @@ add_action( 'ocdi/after_import', function ( $selected ) {
         error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
     }
 
-    // /* ---------- set Home 1 as the static front page ---------- */
-    // // try slug first (faster), fall back to page title
-    // $front_page = get_page_by_path( 'home-1' );           // slug after import
-    // if ( ! $front_page ) {
-    //     $front_page = get_page_by_title( 'Home 1' );      // title as seen in the XML
-    // }
+    /* ---------- set Home 1 as the static front page ---------- */
+    // try slug first (faster), fall back to page title
+    $query = new WP_Query( [
+        'post_type'         => 'page',
+        'post_status'       => 'publish',
+        'title'             => $selected['home_page_title'],   // exact-match title
+        'orderby'           => 'ID',
+        'order'             => 'DESC',
+        'posts_per_page'    => 1,
+        'no_found_rows'     => true,       // skip COUNT(*)
+        'fields'            => 'ids',      // return IDs only
+        'suppress_filters'  => true,
+    ] );
+    $front_id = $query->posts ? (int) $query->posts[0] : 0;
+    wp_reset_postdata();
 
-    // if ( $front_page ) {
-    //     update_option( 'show_on_front', 'page' );         // switch to static page
-    //     update_option( 'page_on_front', $front_page->ID );
-    // }
-
-    // /* ---------- optional: set a Posts / Blog page ---------- */
-    // $blog_page = get_page_by_path( 'blog' ) ?: get_page_by_title( 'Blog' );
-    // if ( $blog_page ) {
-    //     update_option( 'page_for_posts', $blog_page->ID );
-    // }
-
+    /* 3 ▸ Update Reading settings only if we found a page ------------ */
+    if ( $front_id ) {
+        update_option( 'show_on_front', 'page' );
+        update_option( 'page_on_front',  $front_id );
+    }
+   
     /* ---- Regenerate Elementor CSS ---- */
 	if ( class_exists( '\Elementor\Plugin' ) ) {
 		\Elementor\Plugin::$instance->files_manager->clear_cache();
