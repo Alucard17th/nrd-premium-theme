@@ -76,7 +76,7 @@ function mpt_register_required_plugins() {
     tgmpa($plugins, $config);
 }
 
-add_action( 'pt-ocdi/after_import', 'mytheme_ocdi_after_import' );
+add_action( 'ocdi/after_import', 'mytheme_ocdi_after_import' );
 
 function mytheme_ocdi_after_import( $import ) {
 
