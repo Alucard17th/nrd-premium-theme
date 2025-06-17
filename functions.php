@@ -177,32 +177,35 @@ function mpt_register_required_plugins() {
  *  – $selected_import is the array you returned in pt-ocdi/import_files.
  *    We use its import_file_name to build the path to the kit ZIP.
  */
-add_action( 'ocdi/after_import', 'nrd_after_demo_import' );
-
+add_action( 'pt-ocdi/after_import', 'nrd_after_demo_import' );
 function nrd_after_demo_import( array $selected_import ) {
 
 	/* -----------------------------------------------------------
-	 * 1 ▸ Build kit path from the demo slug
+	 * 1 ▸ Build the zip path that matches the chosen demo
 	 * --------------------------------------------------------- */
-	$slug    = sanitize_title( $selected_import['custom_slug'] ); // e.g. "hero-showcase"
+	$slug    = sanitize_title( $selected_import['custom_slug'] );           // hero-showcase
 	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
 
 	if ( ! class_exists( '\Elementor\Plugin' ) || ! file_exists( $kit_zip ) ) {
-		return; // Elementor not active or kit missing – exit safely
+		return; // Elementor not active OR zip missing
 	}
 
 	/* -----------------------------------------------------------
-	 * 2 ▸ Import the kit and grab its post-ID
+	 * 2 ▸ Import the kit  – Elementor returns an array:
+	 *     [ 'kit_id' => 34, 'status' => 'success', ... ]
 	 * --------------------------------------------------------- */
-	$import_export = \Elementor\Plugin::$instance->app->get_component( 'import-export' );
-	$import_export->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
+	$import_export = \Elementor\Plugin::$instance
+	               ->app
+	               ->get_component( 'import-export' );
 
-	// works on Elementor ≥ 3.18
-	$kit_id = $import_export->get_last_imported_kit_id();
+	$response = $import_export->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
+	$kit_id   = is_array( $response ) && ! empty( $response['kit_id'] )
+	          ? (int) $response['kit_id']
+	          : 0;
 
-	// fallback for older versions: query for newest kit by date
+	/* ----------------- fallback if the array key is absent ----- */
 	if ( ! $kit_id ) {
-		$kits = get_posts( [
+		$latest = get_posts( [
 			'post_type'   => 'elementor_library',
 			'meta_key'    => '_elementor_template_type',
 			'meta_value'  => 'kit',
@@ -211,26 +214,28 @@ function nrd_after_demo_import( array $selected_import ) {
 			'numberposts' => 1,
 			'fields'      => 'ids',
 		] );
-		$kit_id = $kits ? (int) $kits[0] : 0;
+		$kit_id = $latest ? (int) $latest[0] : 0;
+	}
+
+	if ( ! $kit_id ) {
+		return; // still nothing? bail out gracefully
 	}
 
 	/* -----------------------------------------------------------
-	 * 3 ▸ Activate the kit (all versions safe)
+	 * 3 ▸ Activate the kit (works on every Elementor build)
 	 * --------------------------------------------------------- */
-	if ( $kit_id ) {
-		update_option( 'elementor_active_kit', $kit_id );
+	update_option( 'elementor_active_kit', $kit_id );
 
-		$manager = \Elementor\Plugin::$instance->kits_manager;
-		if ( method_exists( $manager, 'switch_active_kit' ) ) {      // Elementor ≥ 3.11
-			$manager->switch_active_kit( $kit_id );
-		}
+	$manager = \Elementor\Plugin::$instance->kits_manager;
+	if ( method_exists( $manager, 'switch_active_kit' ) ) {        // 3.11+
+		$manager->switch_active_kit( $kit_id );
 	}
 
 	/* -----------------------------------------------------------
-	 * 4 ▸ Purge Elementor CSS cache and rebuild every file
+	 * 4 ▸ Flush & rebuild CSS so selectors use the new kit-ID
 	 * --------------------------------------------------------- */
 	$fm = \Elementor\Plugin::$instance->files_manager;
-	$fm->clear_cache();                                              // delete old post-*.css
+	$fm->clear_cache();
 
 	$posts = get_posts( [
 		'post_type'      => [ 'page', 'post', 'elementor_library' ],
@@ -239,17 +244,14 @@ function nrd_after_demo_import( array $selected_import ) {
 		'fields'         => 'ids',
 	] );
 
-	foreach ( $posts as $post_id ) {
-		if ( method_exists( $fm, 'regenerate_css' ) ) {              // Elementor ≥ 3.10
-			$fm->regenerate_css( [ $post_id ] );
+	foreach ( $posts as $p ) {
+		if ( method_exists( $fm, 'regenerate_css' ) ) {            // 3.10+
+			$fm->regenerate_css( [ $p ] );
 		} else {
-			$fm->create_css_file( $post_id );                        // older fallback
+			$fm->create_css_file( $p );                            // <= 3.9
 		}
 	}
 
-	/* -----------------------------------------------------------
-	 * 5 ▸ Flush addon caches (UAEL, etc.)
-	 * --------------------------------------------------------- */
 	if ( function_exists( 'uael_clear_asset_cache' ) ) {
 		uael_clear_asset_cache();
 	}
