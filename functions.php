@@ -143,11 +143,11 @@ add_filter( 'elementor/utils/register_elementor_post_type_args', function ( $arg
 // add_action( 'ocdi/after_import', 'cdx_after_import_setup' );
 
 
-add_action( 'pt-ocdi/after_import', function ( $selected ) {
+add_action( 'ocdi/after_import', function ( $selected ) {
 
     error_log('Selected: ' . print_r($selected, true));
 	// turn "01 · Hero Showcase" → "hero-showcase"
-	$slug = sanitize_title( $selected['import_file_name'] );
+	$slug = sanitize_title( $selected['custom_slug'] );
 
 	$kit_zip = get_theme_file_path( "demo-data/{$slug}/elementor-kit.zip" );
 
@@ -157,6 +157,6 @@ add_action( 'pt-ocdi/after_import', function ( $selected ) {
 			->get_component( 'import-export' )
 			->import_kit( $kit_zip, [ 'referrer' => 'remote' ] );
 	}else{
-        error_log('Error: ' . print_r($kit_zip, true));
+        error_log('Error In Kit or Elementor: ' . print_r($kit_zip, true));
     }
 } );
